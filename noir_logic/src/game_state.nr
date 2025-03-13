@@ -7,43 +7,45 @@ global STATE_FINISHED: Field = 2;
 pub struct GameState {
     pub(crate) state: Field,
     pub(crate) prng: Prng,
-    pub(crate) winning_door: Field,
-    pub(crate) chosen_door: Field,
-    pub(crate) open_door: Field,
+    pub(crate) winning_door: u8,
+    pub(crate) chosen_door: u8,
+    pub(crate) open_door: u8,
 }
 
 impl GameState {
     pub fn init(seed: Field) -> GameState {
         let mut prng = Prng::init(seed);
-        let winning_door = prng.get_field();
+        let winning_door = prng.get_field() as u8 % 3;
+        // println(f"Winning door: {winning_door}");
 
         GameState {
             state: STATE_INITIALIZED,
             prng,
             winning_door,
-            chosen_door: Field::default(),
-            open_door: Field::default(),
+            chosen_door: 0,
+            open_door: 0,
         }
     }
 
     // Returns the opened door
-    pub fn choose_door(&mut self, door: Field) -> Field {
+    pub fn choose_door(&mut self, door: u8) -> u8 {
         assert(self.state == STATE_INITIALIZED);
-        assert(door as u8 < 3);
+        assert(door < 3);
+        self.chosen_door = door;
 
         // We try avoiding nested if-else statements since we do not support them yet.
         let calc_if_equal = {
             // Winning door == chosen door
             let rand = self.prng.get_field();
             let opened = rand as bool;
-            let opened = opened as Field;
+            let opened = opened as u8;
             let opened = if self.winning_door == 0 {
                 opened + 1
             } else {
                 opened
             };
             let opened = if self.winning_door == 1 {
-                ((opened + 1) as u8 % 3) as Field
+                (opened + 1) % 3
             } else {
                 opened
             };
@@ -77,4 +79,59 @@ impl GameState {
         self.state = STATE_FINISHED;
         user_door == self.winning_door
     }
+}
+
+#[test]
+fn test_win_no_switch() {
+    let seed = 123;
+    let mut game = GameState::init(seed); // Winning door is 0
+    let opened = game.choose_door(0);
+    assert(opened != 0);
+    assert(game.switch(false));
+}
+
+#[test]
+fn test_win_switch1() {
+    let seed = 123;
+    let mut game = GameState::init(seed); // Winning door is 0
+    let opened = game.choose_door(1);
+    assert(opened == 2);
+    assert(game.switch(true));
+}
+
+#[test]
+fn test_win_switch2() {
+    let seed = 123;
+    let mut game = GameState::init(seed); // Winning door is 0
+    let opened = game.choose_door(2);
+    assert(opened == 1);
+    assert(game.switch(true));
+}
+
+
+#[test]
+fn test_lose_no_switch1() {
+    let seed = 123;
+    let mut game = GameState::init(seed); // Winning door is 0
+    let opened = game.choose_door(1);
+    assert(opened == 2);
+    assert(!game.switch(false));
+}
+
+#[test]
+fn test_lose_no_switch2() {
+    let seed = 123;
+    let mut game = GameState::init(seed); // Winning door is 0
+    let opened = game.choose_door(2);
+    assert(opened == 1);
+    assert(!game.switch(false));
+}
+
+#[test]
+fn test_lose_switch() {
+    let seed = 123;
+    let mut game = GameState::init(seed); // Winning door is 0
+    let opened = game.choose_door(0);
+    assert(opened != 0);
+    assert(!game.switch(true));
 }

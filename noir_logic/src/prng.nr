@@ -1,6 +1,6 @@
 pub struct Prng {
-    state: [Field; 4],
-    position: Field,
+    pub(crate) state: [Field; 4],
+    pub(crate) position: Field,
 }
 
 impl Prng {

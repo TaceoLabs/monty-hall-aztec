@@ -1,0 +1,19 @@
+[package]
+name = "mpc-node"
+version = "0.1.0"
+description = "An MPC node running the monty-hall circuits"
+
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+protos={path="../protos/", version="0.1.0"}
+eyre.workspace = true
+tokio.workspace = true
+serde.workspace = true
+tonic.workspace = true
+co_noir = { git="https://github.com/TaceoLabs/co-snarks", package="co-noir" }
+co_builder = { git="https://github.com/TaceoLabs/co-snarks", package="co-builder" }

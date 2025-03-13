@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package monty_hall;
+
+service MpcNodeService {
+    rpc NewGame (NewGameRequest) returns (NewGameResponse);
+}
+
+message NewGameRequest {
+    string message = 1;
+}
+
+message NewGameResponse {
+    string message = 1;
+}

@@ -14,9 +14,9 @@ pub struct GameState {
 
 impl GameState {
     pub fn init(seed: PrivateState<Field>) -> PrivateState<GameState> {
-        seed.verify();
+        let seed = seed.verify();
 
-        let mut prng = Prng::init(seed.data);
+        let mut prng = Prng::init(seed);
         let winning_door = prng.get_field() as u8 % 3;
         // println(f"Winning door: {winning_door}");
 
@@ -35,11 +35,9 @@ impl GameState {
         state: PrivateState<Self>,
         door: PrivateState<u8>,
     ) -> (PrivateState<GameState>, PrivateState<u8>) {
-        state.verify();
-        door.verify();
+        let mut state = state.verify();
+        let door = door.verify();
 
-        let mut state = state.data;
-        let door = door.data;
         assert(state.state == STATE_INITIALIZED);
         assert(door < 3);
         state.chosen_door = door;
@@ -81,11 +79,9 @@ impl GameState {
 
     // Returns whether the player won or not
     pub fn switch(state: PrivateState<Self>, switch: PrivateState<bool>) -> PrivateState<bool> {
-        state.verify();
-        switch.verify();
+        let state = state.verify();
+        let switch = switch.verify();
 
-        let state = state.data;
-        let switch = switch.data;
         assert(state.state == STATE_OPENED_DOOR);
 
         let user_door = if switch {

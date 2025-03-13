@@ -15,13 +15,19 @@ impl<D> PrivateState<D>
 where
     D: PrivateStateTrait,
 {
+    // Required to have commitments as public inputs to the main function
+    pub fn from_data_and_commitment(data: D, commitment: Field) -> PrivateState<D> {
+        PrivateState { data, commitment }
+    }
+
     pub fn new(data: D) -> PrivateState<D> {
         let commitment = Self::commit(data);
         PrivateState { data, commitment }
     }
 
-    pub fn verify(self) {
+    pub fn verify(self) -> D {
         assert(self.commitment == Self::commit(self.data));
+        self.data
     }
 
     pub fn commit(data: D) -> Field {

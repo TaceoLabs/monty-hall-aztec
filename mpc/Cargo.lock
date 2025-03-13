@@ -2294,6 +2294,7 @@ dependencies = [
  "co-builder",
  "co-noir",
  "eyre",
+ "mpc-net",
  "protos",
  "serde",
  "tokio",

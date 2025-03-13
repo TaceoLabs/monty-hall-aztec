@@ -1,0 +1,7 @@
+[package]
+name = "monty_hall"
+type = "lib"
+authors = ["TACEO"]
+compiler_version = ">=1.0.0"
+
+[dependencies]

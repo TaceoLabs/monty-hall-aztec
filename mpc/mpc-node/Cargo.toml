@@ -17,3 +17,4 @@ serde.workspace = true
 tonic.workspace = true
 co_noir = { git="https://github.com/TaceoLabs/co-snarks", package="co-noir" }
 co_builder = { git="https://github.com/TaceoLabs/co-snarks", package="co-builder" }
+mpc_net = { git="https://github.com/TaceoLabs/co-snarks", package="mpc-net" }

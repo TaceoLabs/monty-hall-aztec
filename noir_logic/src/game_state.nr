@@ -95,20 +95,6 @@ impl GameState {
         };
         PrivateState::new(user_door == state.winning_door)
     }
-
-    pub(crate) fn as_field_array(self) -> [Field; 9] {
-        [
-            self.state,
-            self.prng.state[0],
-            self.prng.state[1],
-            self.prng.state[2],
-            self.prng.state[3],
-            self.prng.position,
-            self.winning_door as Field,
-            self.chosen_door as Field,
-            self.open_door as Field,
-        ]
-    }
 }
 
 #[test]

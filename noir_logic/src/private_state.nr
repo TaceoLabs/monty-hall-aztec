@@ -6,7 +6,9 @@ pub struct PrivateState<D> {
 }
 
 pub trait PrivateStateTrait {
-    fn commit(self) -> Field;
+    let N: u32;
+
+    fn as_field_array(self) -> [Field; Self::N];
 }
 
 impl<D> PrivateState<D>
@@ -14,12 +16,17 @@ where
     D: PrivateStateTrait,
 {
     pub fn new(data: D) -> PrivateState<D> {
-        let commitment = data.commit();
+        let commitment = Self::commit(data);
         PrivateState { data, commitment }
     }
 
     pub fn verify(self) {
-        assert(self.commitment == self.data.commit());
+        assert(self.commitment == Self::commit(self.data));
+    }
+
+    pub fn commit(data: D) -> Field {
+        let data = data.as_field_array();
+        PrivateState::<Field>::commit_field_array::<_>(data)
     }
 }
 
@@ -30,26 +37,43 @@ impl PrivateState<Field> {
 }
 
 impl PrivateStateTrait for Field {
-    fn commit(self) -> Field {
-        PrivateState::<Field>::commit_field_array::<1>([self])
+    let N: u32 = 1;
+
+    fn as_field_array(self) -> [Field; Self::N] {
+        [self]
     }
 }
 
 impl PrivateStateTrait for u8 {
-    fn commit(self) -> Field {
-        PrivateState::<Field>::commit_field_array::<1>([self as Field])
+    let N: u32 = 1;
+
+    fn as_field_array(self) -> [Field; Self::N] {
+        [self as Field]
     }
 }
 
 impl PrivateStateTrait for bool {
-    fn commit(self) -> Field {
-        PrivateState::<Field>::commit_field_array::<1>([self as Field])
+    let N: u32 = 1;
+
+    fn as_field_array(self) -> [Field; Self::N] {
+        [self as Field]
     }
 }
 
 impl PrivateStateTrait for GameState {
-    fn commit(self) -> Field {
-        let data = self.as_field_array();
-        PrivateState::<Field>::commit_field_array::<_>(data)
+    let N: u32 = 9;
+
+    fn as_field_array(self) -> [Field; Self::N] {
+        [
+            self.state,
+            self.prng.state[0],
+            self.prng.state[1],
+            self.prng.state[2],
+            self.prng.state[3],
+            self.prng.position,
+            self.winning_door as Field,
+            self.chosen_door as Field,
+            self.open_door as Field,
+        ]
     }
 }

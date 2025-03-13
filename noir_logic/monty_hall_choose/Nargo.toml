@@ -1,0 +1,8 @@
+[package]
+name = "monty_hall_choose"
+type = "bin"
+authors = ["TACEO"]
+compiler_version = ">=1.0.0"
+
+[dependencies]
+monty_hall = { path = "../monty_hall" }

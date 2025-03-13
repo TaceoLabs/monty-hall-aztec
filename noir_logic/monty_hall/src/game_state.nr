@@ -1,4 +1,3 @@
-use super::private_state::PrivateState;
 use super::prng::Prng;
 
 global STATE_INITIALIZED: Field = 0;
@@ -13,9 +12,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn init(seed: PrivateState<Field>) -> PrivateState<GameState> {
-        let seed = seed.verify();
-
+    pub fn init(seed: Field) -> GameState {
         let mut prng = Prng::init(seed);
         let winning_door = prng.get_field() as u8 % 3;
         // println(f"Winning door: {winning_door}");
@@ -27,17 +24,12 @@ impl GameState {
             chosen_door: 0,
             open_door: 0,
         };
-        PrivateState::new(state)
+
+        state
     }
 
     // Returns the opened door and the new game state
-    pub fn choose_door(
-        state: PrivateState<Self>,
-        door: PrivateState<u8>,
-    ) -> (PrivateState<GameState>, PrivateState<u8>) {
-        let mut state = state.verify();
-        let door = door.verify();
-
+    pub fn choose_door(mut state: Self, door: u8) -> (GameState, u8) {
         assert(state.state == STATE_INITIALIZED);
         assert(door < 3);
         state.chosen_door = door;
@@ -74,14 +66,11 @@ impl GameState {
         state.state = STATE_OPENED_DOOR;
         let open_door = state.open_door;
 
-        (PrivateState::new(state), PrivateState::new(open_door))
+        (state, open_door)
     }
 
     // Returns whether the player won or not
-    pub fn switch(state: PrivateState<Self>, switch: PrivateState<bool>) -> PrivateState<bool> {
-        let state = state.verify();
-        let switch = switch.verify();
-
+    pub fn switch(state: Self, switch: bool) -> bool {
         assert(state.state == STATE_OPENED_DOOR);
 
         let user_door = if switch {
@@ -89,78 +78,78 @@ impl GameState {
         } else {
             state.chosen_door
         };
-        PrivateState::new(user_door == state.winning_door)
+        user_door == state.winning_door
     }
 }
 
 #[test]
 fn test_win_no_switch() {
-    let seed = PrivateState::new(123);
-    let choice = PrivateState::new(0);
-    let switch = PrivateState::new(false);
+    let seed = 123;
+    let choice = 0;
+    let switch = false;
 
     let mut game = GameState::init(seed); // Winning door is 0
     let (game, opened) = GameState::choose_door(game, choice);
-    assert(opened.data != 0);
-    assert(GameState::switch(game, switch).data);
+    assert(opened != 0);
+    assert(GameState::switch(game, switch));
 }
 
 #[test]
 fn test_win_switch1() {
-    let seed = PrivateState::new(123);
-    let choice = PrivateState::new(1);
-    let switch = PrivateState::new(true);
+    let seed = 123;
+    let choice = 1;
+    let switch = true;
 
     let mut game = GameState::init(seed); // Winning door is 0
     let (game, opened) = GameState::choose_door(game, choice);
-    assert(opened.data == 2);
-    assert(GameState::switch(game, switch).data);
+    assert(opened == 2);
+    assert(GameState::switch(game, switch));
 }
 
 #[test]
 fn test_win_switch2() {
-    let seed = PrivateState::new(123);
-    let choice = PrivateState::new(2);
-    let switch = PrivateState::new(true);
+    let seed = 123;
+    let choice = 2;
+    let switch = true;
 
     let mut game = GameState::init(seed); // Winning door is 0
     let (game, opened) = GameState::choose_door(game, choice);
-    assert(opened.data == 1);
-    assert(GameState::switch(game, switch).data);
+    assert(opened == 1);
+    assert(GameState::switch(game, switch));
 }
 
 #[test]
 fn test_lose_no_switch1() {
-    let seed = PrivateState::new(123);
-    let choice = PrivateState::new(1);
-    let switch = PrivateState::new(false);
+    let seed = 123;
+    let choice = 1;
+    let switch = false;
 
     let game = GameState::init(seed); // Winning door is 0
     let (game, opened) = GameState::choose_door(game, choice);
-    assert(opened.data == 2);
-    assert(!GameState::switch(game, switch).data);
+    assert(opened == 2);
+    assert(!GameState::switch(game, switch));
 }
 
 #[test]
 fn test_lose_no_switch2() {
-    let seed = PrivateState::new(123);
-    let choice = PrivateState::new(2);
-    let switch = PrivateState::new(false);
+    let seed = 123;
+    let choice = 2;
+    let switch = false;
 
     let mut game = GameState::init(seed); // Winning door is 0
     let (game, opened) = GameState::choose_door(game, choice);
-    assert(opened.data == 1);
-    assert(!GameState::switch(game, switch).data);
+    assert(opened == 1);
+    assert(!GameState::switch(game, switch));
 }
 
 #[test]
 fn test_lose_switch() {
-    let seed = PrivateState::new(123);
-    let choice = PrivateState::new(0);
-    let switch = PrivateState::new(true);
+    let seed = 123;
+    let choice = 0;
+    let switch = true;
 
     let mut game = GameState::init(seed); // Winning door is 0
     let (game, opened) = GameState::choose_door(game, choice);
-    assert(opened.data != 0);
-    assert(!GameState::switch(game, switch).data);
+    assert(opened != 0);
+    assert(!GameState::switch(game, switch));
 }

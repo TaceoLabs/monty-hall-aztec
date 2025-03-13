@@ -2,7 +2,7 @@ use super::game_state::GameState;
 
 pub struct PrivateState<D> {
     pub(crate) data: D,
-    pub(crate) commitment: Field,
+    pub commitment: Field,
 }
 
 pub trait PrivateStateTrait {

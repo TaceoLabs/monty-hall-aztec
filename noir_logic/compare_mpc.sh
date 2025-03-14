@@ -44,7 +44,7 @@ echo "Using nargo version $NARGO_VERSION"
 echo "Using bb version $BARRETENBERG_VERSION"
 echo ""
 
-test_cases=("monty_hall_test" "monty_hall_choose" "monty_hall_switch" "monty_hall_init")
+test_cases=("monty_hall_test" "monty_hall_choose" "monty_hall_switch" "monty_hall_init" "dh_test")
 
 run_proof_verification() {
   local name=$1

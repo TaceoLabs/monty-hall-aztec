@@ -1,0 +1,8 @@
+[package]
+name = "dh_test"
+type = "bin"
+authors = ["TACEO"]
+compiler_version = ">=1.0.0"
+
+[dependencies]
+pss_utils = { path = "../pss_utils" }

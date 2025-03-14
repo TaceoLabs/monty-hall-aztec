@@ -1,3 +1,4 @@
+// Follows the SAFE API [https://eprint.iacr.org/2023/522.pdf](https://eprint.iacr.org/2023/522.pdf)
 pub struct Prng {
     pub(crate) state: [Field; 4],
     pub(crate) position: Field,

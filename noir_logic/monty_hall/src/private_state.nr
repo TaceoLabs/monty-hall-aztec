@@ -1,7 +1,9 @@
+use super::commit::Commit;
 use super::game_state::GameState;
 
 pub struct PrivateState<D> {
     pub(crate) data: D,
+    pub(crate) rand: Field,
     pub commitment: Field,
 }
 
@@ -16,29 +18,23 @@ where
     D: PrivateStateTrait,
 {
     // Required to have commitments as public inputs to the main function
-    pub fn from_data_and_commitment(data: D, commitment: Field) -> PrivateState<D> {
-        PrivateState { data, commitment }
+    pub fn from_data_and_commitment(data: D, rand: Field, commitment: Field) -> PrivateState<D> {
+        PrivateState { data, rand, commitment }
     }
 
-    pub fn new(data: D) -> PrivateState<D> {
-        let commitment = Self::commit(data);
-        PrivateState { data, commitment }
+    pub fn new(data: D, rand: Field) -> PrivateState<D> {
+        let commitment = Self::commit(data, rand);
+        PrivateState { data, rand, commitment }
     }
 
     pub fn verify(self) -> D {
-        assert(self.commitment == Self::commit(self.data));
+        assert(self.commitment == Self::commit(self.data, self.rand));
         self.data
     }
 
-    pub fn commit(data: D) -> Field {
+    pub fn commit(data: D, rand: Field) -> Field {
         let data = data.as_field_array();
-        PrivateState::<Field>::commit_field_array::<_>(data)
-    }
-}
-
-impl PrivateState<Field> {
-    fn commit_field_array<let N: u32>(data: [Field; N]) -> Field {
-        std::hash::poseidon2::Poseidon2::hash(data, N)
+        Commit::commit_field_array::<_>(data, rand)
     }
 }
 

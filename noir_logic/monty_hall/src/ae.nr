@@ -1,3 +1,4 @@
+// Follows the SAFE API [https://eprint.iacr.org/2023/522.pdf](https://eprint.iacr.org/2023/522.pdf)
 pub struct AE {}
 
 // Absorb 2, squeeze 1, absorb 1, squeeze 1, domainsep = 0x4142

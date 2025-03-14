@@ -36,12 +36,13 @@ pub(super) async fn connect(addr: &str) -> eyre::Result<MpcNodeHandle> {
                 MpcNodeJob::NewGame(new_game) => {
                     let result = client
                         .new_game(NewGameRequest {
-                            message: new_game.addr.to_string(),
+                            seed_share: vec![],
+                            seed_commitment: vec![],
                         })
                         .await
                         .unwrap();
                     tracing::info!("answer: {:?}", result.into_inner());
-                    new_game.tx.send(Ok(()));
+                    let _ = new_game.tx.send(Ok(()));
                 }
             }
         }

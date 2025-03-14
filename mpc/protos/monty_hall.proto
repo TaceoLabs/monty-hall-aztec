@@ -7,7 +7,9 @@ service MpcNodeService {
 }
 
 message NewGameRequest {
-    string message = 1;
+    bytes seed_share = 1;
+    bytes seed_commitment = 2;
+
 }
 
 message NewGameResponse {

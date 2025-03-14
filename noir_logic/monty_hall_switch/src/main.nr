@@ -1,5 +1,5 @@
 use monty_hall::game_state::GameState;
-use monty_hall::private_state::PrivateState;
+use pss_utils::private_state::PrivateState;
 
 fn main(
     state: GameState,

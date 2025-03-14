@@ -1,4 +1,4 @@
-use super::prng::Prng;
+use pss_utils::{private_state::PrivateStateTrait, prng::Prng};
 
 global STATE_INITIALIZED: Field = 0;
 global STATE_OPENED_DOOR: Field = 1;
@@ -9,6 +9,25 @@ pub struct GameState {
     pub(crate) winning_door: u8,
     pub(crate) chosen_door: u8,
     pub(crate) open_door: u8,
+}
+
+impl PrivateStateTrait for GameState {
+    let N: u32 = 9;
+
+    fn as_field_array(self) -> [Field; Self::N] {
+        let prng = self.prng.as_field_array();
+        [
+            self.state,
+            prng[0],
+            prng[1],
+            prng[2],
+            prng[3],
+            prng[4],
+            self.winning_door as Field,
+            self.chosen_door as Field,
+            self.open_door as Field,
+        ]
+    }
 }
 
 impl GameState {

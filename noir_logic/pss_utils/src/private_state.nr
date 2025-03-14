@@ -1,5 +1,4 @@
 use super::commit::Commit;
-use super::game_state::GameState;
 
 pub struct PrivateState<D> {
     pub(crate) data: D,
@@ -59,23 +58,5 @@ impl PrivateStateTrait for bool {
 
     fn as_field_array(self) -> [Field; Self::N] {
         [self as Field]
-    }
-}
-
-impl PrivateStateTrait for GameState {
-    let N: u32 = 9;
-
-    fn as_field_array(self) -> [Field; Self::N] {
-        [
-            self.state,
-            self.prng.state[0],
-            self.prng.state[1],
-            self.prng.state[2],
-            self.prng.state[3],
-            self.prng.position,
-            self.winning_door as Field,
-            self.chosen_door as Field,
-            self.open_door as Field,
-        ]
     }
 }

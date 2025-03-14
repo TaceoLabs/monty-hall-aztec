@@ -1,5 +1,5 @@
 use monty_hall::game_state::GameState;
-use monty_hall::private_state::PrivateState;
+use pss_utils::private_state::PrivateState;
 
 fn main(seed: Field, seed_r: Field, seed_c: pub Field, out_r: Field) -> pub Field {
     let seed = PrivateState::from_data_and_commitment(seed, seed_r, seed_c).verify();

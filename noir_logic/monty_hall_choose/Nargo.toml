@@ -6,3 +6,4 @@ compiler_version = ">=1.0.0"
 
 [dependencies]
 monty_hall = { path = "../monty_hall" }
+pss_utils = { path = "../pss_utils" }

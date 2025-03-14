@@ -1,8 +1,7 @@
 [package]
-name = "monty_hall"
+name = "pss_utils"
 type = "lib"
 authors = ["TACEO"]
 compiler_version = ">=1.0.0"
 
 [dependencies]
-pss_utils = { path = "../pss_utils" }

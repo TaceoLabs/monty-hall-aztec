@@ -1,0 +1,7 @@
+[package]
+name = "taceo_commit"
+type = "bin"
+authors = ["TACEO"]
+
+[dependencies]
+pss_utils = { path = "../pss_utils" }

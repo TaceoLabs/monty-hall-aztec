@@ -15,8 +15,10 @@ fn array_concat<T, let N: u32, let M: u32>(
     result
 }
 
+// In the Aztec infrastrucutre it is the owners address and the storage slot, i.e., [owner, storage_slot]
+// The MPC network however only adds a random value alongside the data, since we do not have the concept of storage slots
 pub struct CommitMetaData<let N: u32> {
-    pub(crate) data: [Field; N], // In the Aztec infrastrucutre it is the owners address and the storage slot, i.e., [owner, storage_slot]
+    pub(crate) data: [Field; N],
 }
 
 pub struct PrivateState<D, let N: u32> {
@@ -55,12 +57,27 @@ where
         self.data
     }
 
+    // Returns the data and the nullifier
+    pub fn verify_and_nullify(self, secret_key: Field) -> (D, Field) {
+        let data = self.verify();
+        let nullifier = PrivateState::<D, N>::compute_nullifier(self.commitment, secret_key);
+        (data, nullifier)
+    }
+
     // Aztec compatible: [https://docs.aztec.network/aztec/smart_contracts/functions/attributes#implementing-notes](https://docs.aztec.network/aztec/smart_contracts/functions/attributes#implementing-notes)
     pub fn commit(data: D, meta: CommitMetaData<N>) -> Field {
         let GENERATOR_INDEX__NOTE_HASH: u32 = 1;
 
         let data = data.as_field_array();
         let packed = array_concat(GENERATOR_INDEX__NOTE_HASH as Field, data, meta.data);
+        Commit::poseidon2_hash(packed)
+    }
+
+    // Aztec compatible: [https://docs.aztec.network/aztec/smart_contracts/functions/attributes#implementing-notes](https://docs.aztec.network/aztec/smart_contracts/functions/attributes#implementing-notes)
+    pub fn compute_nullifier(commitment: Field, secret_key: Field) -> Field {
+        let GENERATOR_INDEX__NOTE_NULLIFIER: u32 = 53;
+
+        let packed = [GENERATOR_INDEX__NOTE_NULLIFIER as Field, commitment, secret_key];
         Commit::poseidon2_hash(packed)
     }
 }

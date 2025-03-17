@@ -53,7 +53,9 @@ where
     }
 
     pub fn verify(self) -> D {
-        assert(self.commitment == Self::commit(self.data, self.meta));
+        let calc_commitment = Self::commit(self.data, self.meta);
+        // println(calc_commitment);
+        assert(self.commitment == calc_commitment);
         self.data
     }
 

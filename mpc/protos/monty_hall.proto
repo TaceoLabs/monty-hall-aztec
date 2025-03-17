@@ -4,7 +4,7 @@ package monty_hall;
 
 service MpcNodeService {
     rpc SampleRand (SampleRandRequest) returns (SampleRandResponse);
-    rpc NewGame (NewGameRequest) returns (NewGameResponse);
+    rpc InitGame (InitGameRequest) returns (InitGameResponse);
     rpc RevealDoor (RevealDoorRequest) returns (RevealDoorResponse);
 }
 
@@ -14,14 +14,11 @@ message SampleRandResponse {
     bytes seed_c = 1;
 }
 
-message NewGameRequest {
-    bytes seed_share = 1;
-    bytes seed_commitment = 2;
-}
+message InitGameRequest { }
 
-message NewGameResponse {
+message InitGameResponse {
     bytes proof = 1;
-    bytes seed_commitment = 2;
+    bytes game_state_c = 2;
 }
 
 message RevealDoorRequest {

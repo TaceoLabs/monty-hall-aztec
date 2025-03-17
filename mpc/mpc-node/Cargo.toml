@@ -21,6 +21,7 @@ co_builder = { git="https://github.com/TaceoLabs/co-snarks", package="co-builder
 mpc_net = { git="https://github.com/TaceoLabs/co-snarks", package="mpc-net" }
 mpc_core = { git="https://github.com/TaceoLabs/co-snarks", package="mpc-core" }
 co_acvm = { git="https://github.com/TaceoLabs/co-snarks", package="co-acvm" }
+ultrahonk = { git="https://github.com/TaceoLabs/co-snarks", package="ultrahonk" }
 
 crypto_box.workspace = true
 toml = "0.8.20"

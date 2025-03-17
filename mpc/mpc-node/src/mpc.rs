@@ -1,9 +1,8 @@
-use ark_ff::Zero as _;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Instant;
 
-use ark_serialize::CanonicalSerialize;
+use ark_ff::One as _;
 use co_builder::prelude::{ProverCrs, ZeroKnowledge};
 use co_noir::{
     Bn254, CrsParser, Poseidon2Sponge, Rep3AcvmType, Rep3CoUltraHonk, Rep3MpcNet, Utils,
@@ -13,10 +12,11 @@ use mpc_core::protocols::rep3::network::IoContext;
 use noirc_artifacts::program::ProgramArtifact;
 use protos::monty_hall::mpc_node_service_server::MpcNodeService;
 use protos::monty_hall::{
-    NewGameRequest, NewGameResponse, RevealDoorRequest, RevealDoorResponse, SampleRandRequest,
+    InitGameRequest, InitGameResponse, RevealDoorRequest, RevealDoorResponse, SampleRandRequest,
     SampleRandResponse,
 };
 use tonic::async_trait;
+use ultrahonk::prelude::HonkProof;
 
 use crate::config::NodeConfig;
 use crate::data_store::DbStore;
@@ -59,10 +59,10 @@ impl MpcNode {
     }
 }
 
-pub(crate) struct InitNewGameResult {
-    proof: Vec<u8>,
-    game_state_r: ArithmeticShare,
-    game_state_c: ark_bn254::Fr,
+pub(crate) struct InitState {
+    pub(crate) proof: HonkProof<ark_bn254::Fr>,
+    pub(crate) game_state_r: ArithmeticShare,
+    pub(crate) game_state_c: ark_bn254::Fr,
 }
 
 pub(crate) struct RootRandomness {
@@ -98,7 +98,7 @@ impl MpcNode {
         network: Rep3MpcNet,
         root_randomness: RootRandomness,
         init_circuit: ProgramArtifact,
-    ) -> eyre::Result<InitNewGameResult> {
+    ) -> eyre::Result<InitState> {
         tracing::info!("creating io context");
         let mut io_context = IoContext::init(network)?;
 
@@ -129,6 +129,12 @@ impl MpcNode {
         let (witness_share, net) =
             co_noir::generate_witness_rep3(input_share, init_circuit, network)?;
         let elapsed_witness = time.elapsed();
+        // hardcoded for the time being
+        let game_state_c = if let Rep3AcvmType::Public(commitment) = witness_share[4] {
+            commitment
+        } else {
+            eyre::bail!("THIS SHOULD NOT HAPPEN - COMMITMENT IS NOT ON 4 ANYMORE");
+        };
 
         // generate proving key and vk
         let (pk, net) =
@@ -169,10 +175,10 @@ impl MpcNode {
             elapsed_proof.subsec_nanos()
         );
 
-        Ok(InitNewGameResult {
-            proof: proof.to_buffer(),
+        Ok(InitState {
+            proof,
             game_state_r: out_r,
-            game_state_c: ark_bn254::Fr::zero(),
+            game_state_c,
         })
     }
 
@@ -183,8 +189,8 @@ impl MpcNode {
         network: Rep3MpcNet,
     ) -> eyre::Result<(ark_bn254::Fr, Rep3MpcNet)> {
         let mut input_share = BTreeMap::default();
-        input_share.insert("data".to_string(), Rep3AcvmType::Shared(data.to_owned()));
-        input_share.insert("rand".to_string(), Rep3AcvmType::Shared(rand.to_owned()));
+        input_share.insert("x".to_string(), Rep3AcvmType::Shared(data.to_owned()));
+        input_share.insert("meta".to_string(), Rep3AcvmType::Shared(rand.to_owned()));
         let start = Instant::now();
         // TODO we need a better way to simply execute a noir program and obtain
         // the outputs
@@ -243,12 +249,11 @@ impl MpcNodeService for MpcNode {
         let seed_c = self.db_store.store_root_rand(result).await.unwrap();
         Ok(tonic::Response::new(SampleRandResponse { seed_c }))
     }
-    async fn new_game(
+    async fn init_game(
         &self,
-        _: tonic::Request<NewGameRequest>,
-    ) -> std::result::Result<tonic::Response<NewGameResponse>, tonic::Status> {
+        _: tonic::Request<InitGameRequest>,
+    ) -> std::result::Result<tonic::Response<InitGameResponse>, tonic::Status> {
         let network_config = self.config.network_config().unwrap();
-        let commit_circuit = self.commit_circuit.clone();
         let init_circuit = self.init_circuit.clone();
         let crs = Arc::clone(&self.crs);
         let root_randomess = self
@@ -283,7 +288,15 @@ impl MpcNodeService for MpcNode {
                 return Err(tonic::Status::internal("checks logs something broke"));
             }
         };
-        todo!()
+        let serialized = self
+            .db_store
+            .init_monty_hall(result)
+            .await
+            .expect("can store into DB");
+        Ok(tonic::Response::new(InitGameResponse {
+            proof: serialized.proof,
+            game_state_c: serialized.game_state_c,
+        }))
     }
     async fn reveal_door(
         &self,

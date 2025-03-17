@@ -6,19 +6,14 @@ pub struct SampleRandResponse {
     #[prost(bytes = "vec", tag = "1")]
     pub seed_c: ::prost::alloc::vec::Vec<u8>,
 }
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct InitGameRequest {}
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NewGameRequest {
-    #[prost(bytes = "vec", tag = "1")]
-    pub seed_share: ::prost::alloc::vec::Vec<u8>,
-    #[prost(bytes = "vec", tag = "2")]
-    pub seed_commitment: ::prost::alloc::vec::Vec<u8>,
-}
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct NewGameResponse {
+pub struct InitGameResponse {
     #[prost(bytes = "vec", tag = "1")]
     pub proof: ::prost::alloc::vec::Vec<u8>,
     #[prost(bytes = "vec", tag = "2")]
-    pub seed_commitment: ::prost::alloc::vec::Vec<u8>,
+    pub game_state_c: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct RevealDoorRequest {}
@@ -139,11 +134,11 @@ pub mod mpc_node_service_client {
                 .insert(GrpcMethod::new("monty_hall.MpcNodeService", "SampleRand"));
             self.inner.unary(req, path, codec).await
         }
-        pub async fn new_game(
+        pub async fn init_game(
             &mut self,
-            request: impl tonic::IntoRequest<super::NewGameRequest>,
+            request: impl tonic::IntoRequest<super::InitGameRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::NewGameResponse>,
+            tonic::Response<super::InitGameResponse>,
             tonic::Status,
         > {
             self.inner
@@ -156,11 +151,11 @@ pub mod mpc_node_service_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/monty_hall.MpcNodeService/NewGame",
+                "/monty_hall.MpcNodeService/InitGame",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("monty_hall.MpcNodeService", "NewGame"));
+                .insert(GrpcMethod::new("monty_hall.MpcNodeService", "InitGame"));
             self.inner.unary(req, path, codec).await
         }
         pub async fn reveal_door(
@@ -209,10 +204,13 @@ pub mod mpc_node_service_server {
             tonic::Response<super::SampleRandResponse>,
             tonic::Status,
         >;
-        async fn new_game(
+        async fn init_game(
             &self,
-            request: tonic::Request<super::NewGameRequest>,
-        ) -> std::result::Result<tonic::Response<super::NewGameResponse>, tonic::Status>;
+            request: tonic::Request<super::InitGameRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::InitGameResponse>,
+            tonic::Status,
+        >;
         async fn reveal_door(
             &self,
             request: tonic::Request<super::RevealDoorRequest>,
@@ -342,25 +340,25 @@ pub mod mpc_node_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/monty_hall.MpcNodeService/NewGame" => {
+                "/monty_hall.MpcNodeService/InitGame" => {
                     #[allow(non_camel_case_types)]
-                    struct NewGameSvc<T: MpcNodeService>(pub Arc<T>);
+                    struct InitGameSvc<T: MpcNodeService>(pub Arc<T>);
                     impl<
                         T: MpcNodeService,
-                    > tonic::server::UnaryService<super::NewGameRequest>
-                    for NewGameSvc<T> {
-                        type Response = super::NewGameResponse;
+                    > tonic::server::UnaryService<super::InitGameRequest>
+                    for InitGameSvc<T> {
+                        type Response = super::InitGameResponse;
                         type Future = BoxFuture<
                             tonic::Response<Self::Response>,
                             tonic::Status,
                         >;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::NewGameRequest>,
+                            request: tonic::Request<super::InitGameRequest>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as MpcNodeService>::new_game(&inner, request).await
+                                <T as MpcNodeService>::init_game(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -371,7 +369,7 @@ pub mod mpc_node_service_server {
                     let max_encoding_message_size = self.max_encoding_message_size;
                     let inner = self.inner.clone();
                     let fut = async move {
-                        let method = NewGameSvc(inner);
+                        let method = InitGameSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

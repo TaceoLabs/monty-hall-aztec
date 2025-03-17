@@ -19,3 +19,7 @@ tracing-subscriber.workspace = true
 thiserror = "2.0.12"
 eyre.workspace=true
 tonic.workspace = true
+
+co_noir = { git="https://github.com/TaceoLabs/co-snarks", package="co-noir" }
+co_builder = { git="https://github.com/TaceoLabs/co-snarks", package="co-builder" }
+ultrahonk = { git="https://github.com/TaceoLabs/co-snarks", package="ultrahonk" }

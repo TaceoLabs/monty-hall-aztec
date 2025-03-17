@@ -3,6 +3,9 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use co_builder::prelude::ZeroKnowledge;
+use co_noir::{Bn254, Poseidon2Sponge, UltraHonk, VerifyingKey, VerifyingKeyBarretenberg};
+use ultrahonk::prelude::HonkProof;
 
 use crate::{AppState, error::ApiResult};
 
@@ -29,7 +32,7 @@ pub async fn sample_root_rand(State(state): State<AppState>) -> ApiResult<Status
     Ok(StatusCode::OK)
 }
 
-pub async fn new_game(State(state): State<AppState>) -> ApiResult<StatusCode> {
+pub async fn init_game(State(state): State<AppState>) -> ApiResult<StatusCode> {
     let (response0, response1, response2) = tokio::join!(
         state.node0.new_game(),
         state.node1.new_game(),
@@ -41,13 +44,26 @@ pub async fn new_game(State(state): State<AppState>) -> ApiResult<StatusCode> {
     if response0.proof != response1.proof || response1.proof != response2.proof {
         Err(eyre::eyre!("proofs differ!"))?;
     }
-    if response0.seed_commitment != response1.seed_commitment
-        || response1.seed_commitment != response2.seed_commitment
+    if response0.game_state_c != response1.game_state_c
+        || response1.game_state_c != response2.game_state_c
     {
         Err(eyre::eyre!("seed_commitment differ!"))?;
     }
-    let _proof = response0.proof;
-    tracing::info!("retrieved proofs! Now sending them on chain (soon tm)");
+
+    let init_vk = std::fs::read(state.init_vk_path).unwrap();
+    let init_vk = VerifyingKeyBarretenberg::<Bn254>::from_buffer(&init_vk).unwrap();
+
+    let init_vk = VerifyingKey::from_barrettenberg_and_crs(init_vk, state.verifier_crs);
+    let proof = HonkProof::from_buffer(&response0.proof).expect("can deser proof");
+
+    let result =
+        UltraHonk::<_, Poseidon2Sponge>::verify(proof, init_vk, ZeroKnowledge::Yes).unwrap();
+
+    if result {
+        tracing::info!("retrieved proofs! Now sending them on chain (soon tm)");
+    } else {
+        tracing::error!("proofs do not verify! Rejected")
+    }
     // TODO SEND THIS ON CHAIN
     Ok(StatusCode::OK)
 }

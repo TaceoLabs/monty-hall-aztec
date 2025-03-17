@@ -1,0 +1,21 @@
+[package]
+name = "monty-hall-orchestration"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.1"
+ark-bn254.workspace = true
+ark-serialize.workspace = true
+clap.workspace = true
+protos = {path = "../protos/", version = "0.1.0"}
+tokio.workspace = true
+serde.workspace = true
+serde_json = "1"
+tower = "0.5.2"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror = "2.0.12"
+eyre.workspace=true
+tonic.workspace = true

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package monty_hall;
+
+service MpcNodeService {
+    rpc SampleRand (SampleRandRequest) returns (SampleRandResponse);
+    rpc NewGame (NewGameRequest) returns (NewGameResponse);
+    rpc RevealDoor (RevealDoorRequest) returns (RevealDoorResponse);
+}
+
+message SampleRandRequest { }
+
+message SampleRandResponse {
+    bytes seed_c = 1;
+}
+
+message NewGameRequest {
+    bytes seed_share = 1;
+    bytes seed_commitment = 2;
+}
+
+message NewGameResponse {
+    bytes proof = 1;
+    bytes seed_commitment = 2;
+}
+
+message RevealDoorRequest {
+
+}
+
+message RevealDoorResponse {
+
+}

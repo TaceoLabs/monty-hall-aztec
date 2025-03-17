@@ -1,0 +1,43 @@
+[package]
+name = "mpc-node"
+version = "0.1.0"
+description = "An MPC node running the monty-hall circuits"
+
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+protos={path="../protos/", version="0.1.0"}
+eyre.workspace = true
+tokio.workspace = true
+serde.workspace = true
+tonic.workspace = true
+rustls = "0.23.23"
+co_noir = { git="https://github.com/TaceoLabs/co-snarks", package="co-noir" }
+co_builder = { git="https://github.com/TaceoLabs/co-snarks", package="co-builder" }
+mpc_net = { git="https://github.com/TaceoLabs/co-snarks", package="mpc-net" }
+mpc_core = { git="https://github.com/TaceoLabs/co-snarks", package="mpc-core" }
+co_acvm = { git="https://github.com/TaceoLabs/co-snarks", package="co-acvm" }
+
+crypto_box.workspace = true
+toml = "0.8.20"
+
+noirc-abi = { version = "1.0.0-beta.3", git = "https://github.com/noir-lang/noir/", tag = "v1.0.0-beta.3", package = "noirc_abi" }
+noirc-artifacts = { version = "1.0.0-beta.3", git = "https://github.com/noir-lang/noir/", tag = "v1.0.0-beta.3", package = "noirc_artifacts" }
+
+hkdf = "0.12.4"
+
+secrecy="0.10.3"
+sha2 = "0.10.8"
+ark-ff = "0.5.0"
+ark-bn254.workspace = true
+ark-serialize.workspace = true
+sqlx = { version = "0.8.3", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "uuid",
+    "macros",
+] }

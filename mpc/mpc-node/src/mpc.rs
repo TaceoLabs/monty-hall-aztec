@@ -12,7 +12,10 @@ use mpc_core::protocols::rep3::Rep3PrimeFieldShare;
 use mpc_core::protocols::rep3::network::IoContext;
 use noirc_artifacts::program::ProgramArtifact;
 use protos::monty_hall::mpc_node_service_server::MpcNodeService;
-use protos::monty_hall::{NewGameRequest, NewGameResponse, SampleRandRequest, SampleRandResponse};
+use protos::monty_hall::{
+    NewGameRequest, NewGameResponse, RevealDoorRequest, RevealDoorResponse, SampleRandRequest,
+    SampleRandResponse,
+};
 use tonic::async_trait;
 
 use crate::config::NodeConfig;
@@ -280,6 +283,12 @@ impl MpcNodeService for MpcNode {
                 return Err(tonic::Status::internal("checks logs something broke"));
             }
         };
+        todo!()
+    }
+    async fn reveal_door(
+        &self,
+        _: tonic::Request<RevealDoorRequest>,
+    ) -> Result<tonic::Response<RevealDoorResponse>, tonic::Status> {
         todo!()
     }
 }

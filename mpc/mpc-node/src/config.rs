@@ -16,6 +16,10 @@ pub struct NodeConfig {
     pub crs_path: PathBuf,
 
     /// The path to the init circuit
+    #[clap(long, env = "NODE_COMMIT_CIRCUIT")]
+    pub commit_circuit: PathBuf,
+
+    /// The path to the init circuit
     #[clap(long, env = "NODE_INIT_CIRCUIT")]
     pub init_circuit: PathBuf,
 
@@ -26,6 +30,10 @@ pub struct NodeConfig {
     /// The secret phrase to derive key material
     #[clap(long, env = "NODE_KEY_PHRASE")]
     pub key_phrase: SecretString,
+
+    /// The url to the postgres db
+    #[clap(long, env = "NODE_PERSISTENT_STORAGE")]
+    pub postgres_url: String,
 }
 
 impl NodeConfig {

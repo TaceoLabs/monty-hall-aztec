@@ -15,26 +15,10 @@ impl CryptoDevice {
             tracing::warn!("cannot install rustls crypto provider!");
             tracing::warn!("we continue but this should not happen...");
         };
-        let sk = derive_secret_keys_from_seed("node1");
-        let pk = sk.public_key();
-        let key = pk.to_bytes();
-        std::fs::write("node1.pk", key);
 
-        let sk = derive_secret_keys_from_seed("node2");
-        let pk = sk.public_key();
-        let key = pk.to_bytes();
-        std::fs::write("node2.pk", key);
-
-        let sk = derive_secret_keys_from_seed("node3");
-        let pk = sk.public_key();
-        let key = pk.to_bytes();
-        std::fs::write("node3.pk", key);
-
-        //let sk = derive_secret_keys_from_seed(config.key_phrase.expose_secret());
-        //let pk = sk.public_key();
-        //let key = pk.to_bytes();
-        //std::fs::write("node1", key);
-        Self { sk }
+        Self {
+            sk: derive_secret_keys_from_seed(config.key_phrase.expose_secret()),
+        }
     }
 }
 

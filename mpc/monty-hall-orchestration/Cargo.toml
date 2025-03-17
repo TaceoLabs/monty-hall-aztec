@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 axum = "0.8.1"
 ark-bn254.workspace = true
+ark-serialize.workspace = true
 clap.workspace = true
 protos = {path = "../protos/", version = "0.1.0"}
 tokio.workspace = true

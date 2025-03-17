@@ -3,12 +3,14 @@ use std::sync::Arc;
 use clap::Parser;
 use config::NodeConfig;
 use crypto_device::CryptoDevice;
+use data_store::DbStore;
 use mpc::MpcNode;
 use protos::monty_hall::mpc_node_service_server::MpcNodeServiceServer;
 use tonic::transport::Server;
 
 mod config;
 mod crypto_device;
+mod data_store;
 mod mpc;
 
 fn install_tracing() {
@@ -26,8 +28,9 @@ async fn main() -> eyre::Result<()> {
     install_tracing();
     let config = Arc::new(NodeConfig::parse());
     let crypto_device = CryptoDevice::init(&config);
+    let db_store = DbStore::init(&config).await?;
     tracing::info!("serving node on {}", config.bind_addr);
-    let mpc_node = MpcNode::init(Arc::clone(&config))?;
+    let mpc_node = MpcNode::init(Arc::clone(&config), db_store)?;
     let service = MpcNodeServiceServer::new(mpc_node);
     Server::builder()
         .add_service(service)

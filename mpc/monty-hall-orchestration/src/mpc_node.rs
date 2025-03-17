@@ -1,14 +1,19 @@
-use eyre::eyre;
-use protos::monty_hall::{NewGameRequest, mpc_node_service_client::MpcNodeServiceClient};
+use protos::monty_hall::{
+    NewGameRequest, NewGameResponse, SampleRandRequest, SampleRandResponse,
+    mpc_node_service_client::MpcNodeServiceClient,
+};
 use tokio::sync::{mpsc, oneshot};
 
+type RootRand = oneshot::Sender<Result<SampleRandResponse, tonic::Status>>;
+
 struct NewGame {
-    addr: ark_bn254::Fr,
-    tx: oneshot::Sender<eyre::Result<()>>,
+    tx: oneshot::Sender<Result<NewGameResponse, tonic::Status>>,
 }
 
 enum MpcNodeJob {
+    RootRand(RootRand),
     NewGame(NewGame),
+    RevealDoor(oneshot::Sender<Result<(), tonic::Status>>),
 }
 
 #[derive(Clone, Debug)]
@@ -33,17 +38,21 @@ pub(super) async fn connect(addr: &str) -> eyre::Result<MpcNodeHandle> {
         };
         while let Some(job) = rx.recv().await {
             match job {
+                MpcNodeJob::RootRand(tx) => {
+                    let result = client.sample_rand(SampleRandRequest {}).await;
+                    let _ = tx.send(result.map(|result| result.into_inner()));
+                }
                 MpcNodeJob::NewGame(new_game) => {
                     let result = client
                         .new_game(NewGameRequest {
                             seed_share: vec![],
                             seed_commitment: vec![],
                         })
-                        .await
-                        .unwrap();
-                    tracing::info!("answer: {:?}", result.into_inner());
-                    let _ = new_game.tx.send(Ok(()));
+                        .await;
+
+                    let _ = new_game.tx.send(result.map(|result| result.into_inner()));
                 }
+                MpcNodeJob::RevealDoor(sender) => todo!(),
             }
         }
     });
@@ -52,11 +61,23 @@ pub(super) async fn connect(addr: &str) -> eyre::Result<MpcNodeHandle> {
 }
 
 impl MpcNodeHandle {
-    pub(crate) async fn new_game(&self, addr: ark_bn254::Fr) -> eyre::Result<()> {
+    pub(crate) async fn sample_root_rand(&self) -> eyre::Result<SampleRandResponse> {
+        let (tx, rx) = oneshot::channel();
+        self.handle.send(MpcNodeJob::RootRand(tx)).await?;
+        rx.await.unwrap().map_err(|err| eyre::eyre!(err))
+    }
+    pub(crate) async fn new_game(&self) -> eyre::Result<NewGameResponse> {
         let (tx, rx) = oneshot::channel();
         self.handle
-            .send(MpcNodeJob::NewGame(NewGame { addr, tx }))
+            .send(MpcNodeJob::NewGame(NewGame { tx }))
             .await?;
-        rx.await?
+        rx.await.unwrap().map_err(|err| eyre::eyre!(err))
+    }
+    pub(crate) async fn reveal_door(&self) -> eyre::Result<NewGameResponse> {
+        let (tx, rx) = oneshot::channel();
+        self.handle
+            .send(MpcNodeJob::NewGame(NewGame { tx }))
+            .await?;
+        rx.await.unwrap().map_err(|err| eyre::eyre!(err))
     }
 }

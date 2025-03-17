@@ -55,7 +55,9 @@ fn from_field_unsafe(scalar: Field) -> EmbeddedCurveScalar {
 }
 
 // From [https://github.com/AztecProtocol/aztec-packages/blob/e45271fb4ce98c1c6edc2a416dbaa354cce1df88/noir-projects/aztec-nr/aztec/src/keys/ephemeral.nr](https://github.com/AztecProtocol/aztec-packages/blob/e45271fb4ce98c1c6edc2a416dbaa354cce1df88/noir-projects/aztec-nr/aztec/src/keys/ephemeral.nr)
-fn generate_ephemeral_key_pair(rand: Field) -> (EmbeddedCurveScalar, EmbeddedCurvePoint) {
+pub(crate) fn generate_ephemeral_key_pair(
+    rand: Field,
+) -> (EmbeddedCurveScalar, EmbeddedCurvePoint) {
     // @todo Need to draw randomness from the full domain of Fq not only Fr
     // We use the randomness to preserve the privacy of both the sender and recipient via encryption, so a malicious
     // sender could use non-random values to reveal the plaintext. But they already know it themselves anyway, and so

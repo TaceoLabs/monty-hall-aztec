@@ -1,4 +1,5 @@
-use super::commit::Commit;
+use super::{commit::Commit, dh};
+use std::embedded_curve_ops::EmbeddedCurvePoint;
 
 fn array_concat<T, let N: u32, let M: u32>(
     separator: T,
@@ -60,9 +61,16 @@ where
     }
 
     // Returns the data and the nullifier
-    pub fn verify_and_nullify(self, secret_key: Field) -> (D, Field) {
+    pub fn verify_and_nullify(
+        self,
+        secret_key: Field,
+        public_key: EmbeddedCurvePoint,
+    ) -> (D, Field) {
         let data = self.verify();
         let nullifier = PrivateState::<D, N>::compute_nullifier(self.commitment, secret_key);
+        let (_, pk) = dh::generate_ephemeral_key_pair(secret_key);
+        assert(pk == public_key);
+
         (data, nullifier)
     }
 

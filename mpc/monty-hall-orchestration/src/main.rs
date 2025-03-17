@@ -1,5 +1,8 @@
+use std::{path::PathBuf, sync::Arc};
+
 use axum::Router;
-use clap::Parser;
+use clap::{Args, Parser};
+use co_noir::{Bn254, CrsParser, VerifyingKey, VerifyingKeyBarretenberg};
 use config::ServerConfig;
 use eyre::Context;
 use mpc_node::MpcNodeHandle;
@@ -20,11 +23,13 @@ fn install_tracing() {
         .init();
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct AppState {
     pub node0: MpcNodeHandle,
     pub node1: MpcNodeHandle,
     pub node2: MpcNodeHandle,
+    pub verifier_crs: ark_bn254::G2Affine,
+    pub init_vk_path: PathBuf,
 }
 
 #[tokio::main]
@@ -32,6 +37,8 @@ async fn main() -> eyre::Result<()> {
     install_tracing();
 
     let config = ServerConfig::parse();
+
+    let verifier_crs = CrsParser::<Bn254>::get_crs_g2(config.verifier_crs)?;
 
     let (node0, node1, node2) = tokio::join!(
         mpc_node::connect(&config.mpc_nodes[0]),
@@ -46,6 +53,8 @@ async fn main() -> eyre::Result<()> {
         node0,
         node1,
         node2,
+        verifier_crs,
+        init_vk_path: config.init_vk_path.clone(),
     };
 
     let app = Router::new()

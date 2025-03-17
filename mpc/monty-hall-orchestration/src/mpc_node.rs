@@ -1,5 +1,5 @@
 use protos::monty_hall::{
-    NewGameRequest, NewGameResponse, SampleRandRequest, SampleRandResponse,
+    InitGameRequest, InitGameResponse, RevealDoorResponse, SampleRandRequest, SampleRandResponse,
     mpc_node_service_client::MpcNodeServiceClient,
 };
 use tokio::sync::{mpsc, oneshot};
@@ -7,7 +7,7 @@ use tokio::sync::{mpsc, oneshot};
 type RootRand = oneshot::Sender<Result<SampleRandResponse, tonic::Status>>;
 
 struct NewGame {
-    tx: oneshot::Sender<Result<NewGameResponse, tonic::Status>>,
+    tx: oneshot::Sender<Result<InitGameResponse, tonic::Status>>,
 }
 
 enum MpcNodeJob {
@@ -43,12 +43,7 @@ pub(super) async fn connect(addr: &str) -> eyre::Result<MpcNodeHandle> {
                     let _ = tx.send(result.map(|result| result.into_inner()));
                 }
                 MpcNodeJob::NewGame(new_game) => {
-                    let result = client
-                        .new_game(NewGameRequest {
-                            seed_share: vec![],
-                            seed_commitment: vec![],
-                        })
-                        .await;
+                    let result = client.init_game(InitGameRequest {}).await;
 
                     let _ = new_game.tx.send(result.map(|result| result.into_inner()));
                 }
@@ -66,18 +61,19 @@ impl MpcNodeHandle {
         self.handle.send(MpcNodeJob::RootRand(tx)).await?;
         rx.await.unwrap().map_err(|err| eyre::eyre!(err))
     }
-    pub(crate) async fn new_game(&self) -> eyre::Result<NewGameResponse> {
+    pub(crate) async fn new_game(&self) -> eyre::Result<InitGameResponse> {
         let (tx, rx) = oneshot::channel();
         self.handle
             .send(MpcNodeJob::NewGame(NewGame { tx }))
             .await?;
         rx.await.unwrap().map_err(|err| eyre::eyre!(err))
     }
-    pub(crate) async fn reveal_door(&self) -> eyre::Result<NewGameResponse> {
-        let (tx, rx) = oneshot::channel();
-        self.handle
-            .send(MpcNodeJob::NewGame(NewGame { tx }))
-            .await?;
-        rx.await.unwrap().map_err(|err| eyre::eyre!(err))
+    pub(crate) async fn reveal_door(&self) -> eyre::Result<RevealDoorResponse> {
+        todo!()
+        //let (tx, rx) = oneshot::channel();
+        //self.handle
+        //    .send(MpcNodeJob::RevealDoor(Re { tx }))
+        //    .await?;
+        //rx.await.unwrap().map_err(|err| eyre::eyre!(err))
     }
 }

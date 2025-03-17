@@ -2594,6 +2594,8 @@ dependencies = [
  "ark-serialize",
  "axum 0.8.1",
  "clap",
+ "co-builder",
+ "co-noir",
  "eyre",
  "protos",
  "serde",
@@ -2605,6 +2607,7 @@ dependencies = [
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "ultrahonk",
 ]
 
 [[package]]
@@ -2683,6 +2686,7 @@ dependencies = [
  "tonic",
  "tracing",
  "tracing-subscriber",
+ "ultrahonk",
 ]
 
 [[package]]

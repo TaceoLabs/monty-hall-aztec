@@ -1,4 +1,5 @@
 // Follows the SAFE API [https://eprint.iacr.org/2023/522.pdf](https://eprint.iacr.org/2023/522.pdf)
+// It is not used in the Aztec infrastructure
 pub struct Commit {}
 
 impl Commit {
@@ -11,7 +12,7 @@ impl Commit {
         *position += 1;
     }
 
-    pub(crate) fn commit_field_array<let N: u32>(data: [Field; N], rand: Field) -> Field {
+    pub(crate) fn commit_field_array<let N: u32>(data: [Field; N]) -> Field {
         let d = 0x4142;
         let absorb = 0x80000000 + N as Field;
         let squeeze = 1;
@@ -23,9 +24,12 @@ impl Commit {
         for i in 0..N {
             Self::absorb(data[i], &mut state, &mut position);
         }
-        Self::absorb(rand, &mut state, &mut position);
 
         // Squeeze
         std::hash::poseidon2_permutation(state, 4)[0]
+    }
+
+    pub(crate) fn poseidon2_hash<let N: u32>(inputs: [Field; N]) -> Field {
+        std::hash::poseidon2::Poseidon2::hash(inputs, N)
     }
 }

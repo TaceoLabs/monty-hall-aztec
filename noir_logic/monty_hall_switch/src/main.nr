@@ -1,14 +1,14 @@
 use monty_hall::game_state::GameState;
-use pss_utils::private_state::PrivateState;
+use pss_utils::private_state::{CommitMetaData, PrivateState};
 
 fn main(
     state: GameState,
-    state_r: Field,
+    state_r: CommitMetaData<1>,
     state_c: pub Field,
     switch: bool,
-    switch_r: Field,
+    switch_r: CommitMetaData<2>,
     switch_c: pub Field,
-    out_r: Field,
+    out_r: CommitMetaData<1>,
 ) -> pub Field {
     let state = PrivateState::from_data_and_commitment(state, state_r, state_c).verify();
     let switch = PrivateState::from_data_and_commitment(switch, switch_r, switch_c).verify();

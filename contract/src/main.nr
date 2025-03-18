@@ -14,10 +14,9 @@ contract MontyHall {
 
     use aztec::macros::{functions::{initializer, private, public}, storage::storage};
     use aztec::prelude::{PrivateImmutable, PublicImmutable, PublicMutable};
-
+    use aztec::protocol_types::traits::Packable;
     use std::{embedded_curve_ops::EmbeddedCurvePoint, hash::poseidon2};
     use uint_note::uint_note::UintNote;
-    use aztec::protocol_types::traits::Packable;
 
     global PROOF_SIZE: u32 = 463; // iirc this is the UH sizes
     global HONK_IDENTIFIER: u32 = 1; // iirc this is the UH identifier
@@ -78,9 +77,7 @@ contract MontyHall {
     /// Called by the MPC network, it starts a new game by proving that it has derived a game from the seed.
     // The proof is a UltraHonk proof (later on with ZK once the recursion is allowed for that). The proof itself needs to contain relations for checking the commitment for the seed, deriving the gamestate from the seed and verifying the commitment of the gamestate.
     #[private]
-    fn start_game(
-        game_state_c: Field,
-    ) {
+    fn start_game(game_state_c: Field) {
         // Safety: This is normal Aztec practice?
         let vk: [Field; VK_SIZE] = unsafe { pop_capsule() };
         // Safety: This is normal Aztec practice?
@@ -96,10 +93,14 @@ contract MontyHall {
             vk_hash_computed,
             HONK_IDENTIFIER,
         );
-        let _ = storage.game_state.initialize(TACEONote::new(
-            storage.nullifying_pk.read(),
-            game_state_c,
-        ));
+        storage
+            .game_state
+            .initialize(TACEONote::new(
+                storage.nullifying_pk.read(),
+                // TODO: Seed commitment?  We somehow need to get it from chain
+                game_state_c,
+            ))
+            .discard();
         // Safety: This is normal Aztec practice?
         unsafe {
             write_game_phase(GAME_STARTED);
@@ -132,27 +133,41 @@ contract MontyHall {
         let vk_hash_computed = compute_vk_hash(vk);
         let vk_hash: [Field; NUMBER_OF_VK_HASHES] = storage.vk_hash.read();
         assert(vk_hash_computed == vk_hash[1]);
-        let game_state_hash = storage.game_state.get_note_hash();
+        let game_state_hash = storage.game_state.get_note_hash(); // TODO can we read from chain?
         let nullifying_key = storage.nullifying_pk.read().pack();
 
         std::verify_proof_with_type(
             vk,
             proof,
-            [game_state_hash, new_game_state_c, opened_door_c, game_state_nullifier, nullifying_key[0], nullifying_key[1], nullifying_key[2]],
+            [
+                game_state_hash,
+                // TODO: User input commitment?  We somehow need to get it from chain
+                new_game_state_c,
+                opened_door_c,
+                game_state_nullifier,
+                nullifying_key[0],
+                nullifying_key[1],
+                nullifying_key[2],
+            ],
             vk_hash[1],
             HONK_IDENTIFIER,
         );
 
-        storage.game_state.replace(
-            TACEONote::new(storage.nullifying_pk.read(), new_game_state_c),
-            game_state_nullifier,
-        ).discard();
+        storage
+            .game_state
+            .replace(
+                TACEONote::new(storage.nullifying_pk.read(), new_game_state_c),
+                game_state_nullifier,
+            )
+            .discard();
         // For this demo we just create a new Note for the opened door. In a real application, the opened door needs to be communicated to the player. There are multiple ways to do so:
         // - Use an encrypted log
         // - Let the MPC network (somehow) send it (encrypted) to the player.
         // In the first case the player owns the private state. In latter case, we can write a "claim function" that creates a private state for the user if he knows the input and randomness for the commitment created on chain. Thus this claim function has data and randomness as input, computes the commitment and asserts it to be equal to the commitment of the opened door. It then creates a new private state for the user.
-         storage.opened_door.initialize(
-            TACEONote::new(storage.nullifying_pk.read(), opened_door_c)).discard();
+        storage
+            .opened_door
+            .initialize(TACEONote::new(storage.nullifying_pk.read(), opened_door_c))
+            .discard();
         // Safety: This is normal Aztec practice?
         unsafe {
             write_game_phase(GAME_OPENED_DOOR);
@@ -184,29 +199,36 @@ contract MontyHall {
         let vk_hash_computed = compute_vk_hash(vk);
         let vk_hash: [Field; NUMBER_OF_VK_HASHES] = storage.vk_hash.read();
         assert(vk_hash_computed == vk_hash[2]);
-        let game_state_hash = storage.game_state.get_note_hash();
+        let game_state_hash = storage.game_state.get_note_hash(); // TODO somehow get this from chain?
         let nullifying_key = storage.nullifying_pk.read().pack();
 
         std::verify_proof_with_type(
             vk,
             proof,
-            [game_state_hash, win_c, game_state_nullifier, nullifying_key[0], nullifying_key[1], nullifying_key[2]],
+            [
+                game_state_hash,
+                // TODO: User input commitment?  We somehow need to get it from chain
+                win_c,
+                game_state_nullifier,
+                nullifying_key[0],
+                nullifying_key[1],
+                nullifying_key[2],
+            ],
             vk_hash[1],
             HONK_IDENTIFIER,
         );
 
         // In a real game we would have to compute a new game state so we can nullify the old one here and keep one for future games. We ignore this for this demo.
         // storage.game_state.replace(
-            // TACEONote::new(storage.nullifying_pk.read(), 0),
-            // game_state_nullifier,
+        // TACEONote::new(storage.nullifying_pk.read(), 0),
+        // game_state_nullifier,
         // ).discard();
 
         // For this demo we just create a new Note for the user if it won. In a real application, the content of this note needs to be communicated to the player. There are multiple ways to do so:
         // - Use an encrypted log
         // - Let the MPC network (somehow) send it (encrypted) to the player.
         // In the first case the player owns the private state. In latter case, we can write a "claim function" that creates a private state for the user if he knows the input and randomness for the commitment created on chain. Thus this claim function has data and randomness as input, computes the commitment and asserts it to be equal to the commitment of the opened door. It then creates a new private state for the user.
-         storage.win.initialize(
-            TACEONote::new(storage.nullifying_pk.read(), win_c)).discard();
+        storage.win.initialize(TACEONote::new(storage.nullifying_pk.read(), win_c)).discard();
         // Safety: This is normal Aztec practice?
         unsafe {
             write_game_phase(GAME_DONE);

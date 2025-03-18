@@ -8,7 +8,7 @@ pub struct GameState {
     pub(crate) prng: Prng,
     pub(crate) winning_door: u8,
     pub(crate) chosen_door: u8,
-    pub(crate) open_door: u8,
+    pub open_door: u8,
 }
 
 impl PrivateStateTrait for GameState {

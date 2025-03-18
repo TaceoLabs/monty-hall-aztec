@@ -1,6 +1,13 @@
 use super::{commit::Commit, dh};
 use std::embedded_curve_ops::EmbeddedCurvePoint;
 
+#[oracle(TACEO_store)]
+unconstrained fn store_private_state_inner<let N: u32, let S: u32>(name: str<S>, d: [Field; N]) {}
+
+unconstrained fn store_private_state<let N: u32, let S: u32>(name: str<S>, d: [Field; N]) {
+    store_private_state_inner(name, d)
+}
+
 fn array_concat<T, let N: u32, let M: u32>(
     separator: T,
     array1: [T; N],
@@ -48,8 +55,13 @@ where
         PrivateState { data, meta, commitment }
     }
 
-    pub fn new(data: D, meta: CommitMetaData<N>) -> PrivateState<D, N> {
+    pub fn new<let S: u32>(name: str<S>, data: D, meta: CommitMetaData<N>) -> PrivateState<D, N> {
         let commitment = Self::commit(data, meta);
+        // SAFETY: we store the private state in MPC
+        unsafe {
+            store_private_state(name, data.as_field_array())
+        }
+
         PrivateState { data, meta, commitment }
     }
 

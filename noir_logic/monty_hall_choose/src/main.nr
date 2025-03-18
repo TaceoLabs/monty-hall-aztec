@@ -20,9 +20,8 @@ fn main(
 
     let (state, opened_door) = GameState::choose_door(state, door);
 
-    // TODO how to open the data to the users?
     (
-        PrivateState::new(state, out1_r).commitment,
-        PrivateState::new(opened_door, out2_r).commitment, state_nullifier,
+        PrivateState::new("game_state", state, out1_r).commitment,
+        PrivateState::new("door", opened_door, out2_r).commitment, state_nullifier,
     )
 }

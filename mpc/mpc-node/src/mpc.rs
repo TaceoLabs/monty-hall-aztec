@@ -8,7 +8,7 @@ use co_noir::{
     Bn254, CrsParser, Poseidon2Sponge, Rep3AcvmType, Rep3CoUltraHonk, Rep3MpcNet, Utils,
 };
 use mpc_core::protocols::rep3::Rep3PrimeFieldShare;
-use mpc_core::protocols::rep3::network::IoContext;
+use mpc_core::protocols::rep3::network::{IoContext, Rep3Network};
 use noirc_artifacts::program::ProgramArtifact;
 use protos::monty_hall::mpc_node_service_server::MpcNodeService;
 use protos::monty_hall::{
@@ -129,6 +129,7 @@ impl MpcNode {
         let (witness_share, net) =
             co_noir::generate_witness_rep3(input_share, init_circuit, network)?;
         let elapsed_witness = time.elapsed();
+
         // hardcoded for the time being
         let game_state_c = if let Rep3AcvmType::Public(commitment) = witness_share[4] {
             commitment
@@ -138,13 +139,13 @@ impl MpcNode {
 
         // generate proving key and vk
         let (pk, net) =
-            co_noir::generate_proving_key_rep3(net, &constraint_system, witness_share, true)?;
+            co_noir::generate_proving_key_rep3(net, &constraint_system, witness_share, false)?;
 
         let elapsed_pk = time.elapsed();
 
         // generate proof
         let (proof, _) =
-            Rep3CoUltraHonk::<_, _, Poseidon2Sponge>::prove(net, pk, &crs, ZeroKnowledge::Yes)?;
+            Rep3CoUltraHonk::<_, _, Poseidon2Sponge>::prove(net, pk, &crs, ZeroKnowledge::No)?;
 
         let elapsed_proof = time.elapsed();
 
@@ -180,6 +181,16 @@ impl MpcNode {
             game_state_r: out_r,
             game_state_c,
         })
+    }
+
+    fn extract_game_state(witness: &[AcvmType]) -> Vec<()> {
+        if let AcvmType::Shared(state) = witness[11] {}
+        if let AcvmType::Shared(state) = witness[12] {}
+        if let AcvmType::Shared(state) = witness[13] {}
+        if let AcvmType::Shared(state) = witness[14] {}
+        if let AcvmType::Shared(state) = witness[15] {}
+
+        todo!()
     }
 
     fn commit(

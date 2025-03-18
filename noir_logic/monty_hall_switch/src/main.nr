@@ -19,6 +19,5 @@ fn main(
 
     let win = GameState::switch(state, switch);
 
-    // TODO how to open the data to the users?
-    (PrivateState::new(win, out_r).commitment, state_nullifier)
+    (PrivateState::new("win", win, out_r).commitment, state_nullifier)
 }
